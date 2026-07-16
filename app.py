@@ -46,20 +46,21 @@ st.markdown("""
     }
     
     .card-container {
-        background: linear-gradient(135deg, rgba(26,32,44,0.96), rgba(45,55,72,0.95));
-        border: 1px solid rgba(99,102,241,0.25);
-        border-radius: 16px;
-        padding: 1.2rem 1.4rem;
+        background: linear-gradient(135deg, rgba(15,23,42,0.98), rgba(30,41,59,0.95));
+        border: 1px solid rgba(14,165,233,0.25);
+        border-radius: 18px;
+        padding: 1.15rem 1.3rem;
         margin-bottom: 1rem;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
     }
 
     .hero-panel {
-        background: linear-gradient(135deg, rgba(79,172,254,0.18), rgba(0,242,254,0.12));
-        border: 1px solid rgba(99,102,241,0.24);
-        border-radius: 18px;
-        padding: 1.25rem 1.4rem;
-        margin-bottom: 1.25rem;
+        background: linear-gradient(135deg, rgba(2,132,199,0.26), rgba(14,165,233,0.12));
+        border: 1px solid rgba(125,211,252,0.24);
+        border-radius: 20px;
+        padding: 1.2rem 1.4rem;
+        margin-bottom: 1.2rem;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
     }
 
     .hero-title {
@@ -89,12 +90,12 @@ st.markdown("""
     }
 
     .recommendation-card {
-        background: linear-gradient(135deg, rgba(17,24,39,0.96), rgba(30,41,59,0.95));
-        border: 1px solid rgba(34,211,238,0.25);
-        border-radius: 18px;
-        padding: 1.2rem 1.3rem;
-        margin-top: 0.6rem;
-        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+        background: linear-gradient(135deg, rgba(2,6,23,0.96), rgba(15,23,42,0.92));
+        border: 1px solid rgba(34,211,238,0.22);
+        border-radius: 20px;
+        padding: 1.15rem 1.25rem;
+        margin-top: 0.75rem;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
     }
 
     .recommendation-title {
@@ -137,6 +138,19 @@ st.markdown("""
     .subtle-text {
         color: #cbd5e1;
         font-size: 0.94rem;
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #f8fafc;
+        margin-bottom: 0.35rem;
+    }
+
+    .section-subtitle {
+        color: #94a3b8;
+        font-size: 0.95rem;
+        margin-bottom: 0.7rem;
     }
     
     .status-badge-benign {
@@ -266,8 +280,8 @@ def get_care_pathway(probability, pred_label):
 def render_patient_drug_guide(probability, pred_label):
     """Show a modern, patient-friendly treatment overview based on the model result."""
     st.markdown("---")
-    st.subheader("🧭 Model-Guided Care Pathway")
-
+    st.markdown('<div class="section-title">🧭 Model-Guided Care Pathway</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-subtitle">Clinical guidance derived from the current prediction confidence.</div>', unsafe_allow_html=True)
     pathway = get_care_pathway(probability, pred_label)
     st.markdown(
         f"""
@@ -536,23 +550,6 @@ with tab1:
                     )
 
                 st.caption("⚠️ This tool is an aid only. Always consult a qualified healthcare professional for diagnosis and treatment.")
-
-                st.markdown("---")
-                st.subheader("Doctor / Patient Summary")
-                if pred_label == 1:
-                    st.write(
-                        "**Summary:** The scan shows a high probability of a malignant lung nodule. Further evaluation by a specialist is recommended before deciding any treatment plan."
-                    )
-                    st.write(
-                        "**Suggested actions:** Refer to a pulmonologist or oncologist, obtain follow-up imaging or biopsy, and discuss risk factors with the patient."
-                    )
-                else:
-                    st.write(
-                        "**Summary:** The scan appears likely benign, but clinical context and symptoms should still be reviewed by a physician."
-                    )
-                    st.write(
-                        "**Suggested actions:** Continue routine monitoring, encourage preventive lung health measures, and follow up if symptoms develop."
-                    )
 
                 render_patient_drug_guide(prob, pred_label)
 
