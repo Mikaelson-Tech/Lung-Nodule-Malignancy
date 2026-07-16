@@ -46,18 +46,97 @@ st.markdown("""
     }
     
     .card-container {
-        background-color: #1a202c;
-        border: 1px solid #2d3748;
-        border-radius: 12px;
-        padding: 1.5rem;
+        background: linear-gradient(135deg, rgba(26,32,44,0.96), rgba(45,55,72,0.95));
+        border: 1px solid rgba(99,102,241,0.25);
+        border-radius: 16px;
+        padding: 1.2rem 1.4rem;
         margin-bottom: 1rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
     }
-    
+
+    .hero-panel {
+        background: linear-gradient(135deg, rgba(79,172,254,0.18), rgba(0,242,254,0.12));
+        border: 1px solid rgba(99,102,241,0.24);
+        border-radius: 18px;
+        padding: 1.25rem 1.4rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #f8fafc;
+        margin-bottom: 0.2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 1rem;
+        color: #cbd5e1;
+    }
+
     .metric-value-large {
         font-size: 2.4rem;
         font-weight: 700;
         color: #00f2fe;
+    }
+
+    .tiny-label {
+        font-size: 0.74rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #7dd3fc;
+        margin-bottom: 0.3rem;
+    }
+
+    .recommendation-card {
+        background: linear-gradient(135deg, rgba(17,24,39,0.96), rgba(30,41,59,0.95));
+        border: 1px solid rgba(34,211,238,0.25);
+        border-radius: 18px;
+        padding: 1.2rem 1.3rem;
+        margin-top: 0.6rem;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+    }
+
+    .recommendation-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #f8fafc;
+    }
+
+    .recommendation-summary {
+        color: #e2e8f0;
+        margin: 0.6rem 0 0.8rem;
+        line-height: 1.55;
+    }
+
+    .recommendation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 0.7rem;
+        margin-bottom: 0.7rem;
+    }
+
+    .info-card {
+        background: rgba(15, 23, 42, 0.7);
+        border-radius: 12px;
+        padding: 0.8rem 0.9rem;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .highlight {
+        font-weight: 700;
+        color: #f8fafc;
+    }
+
+    .action-list {
+        margin: 0.4rem 0 0.6rem 1rem;
+        color: #e2e8f0;
+        line-height: 1.55;
+    }
+
+    .subtle-text {
+        color: #cbd5e1;
+        font-size: 0.94rem;
     }
     
     .status-badge-benign {
@@ -128,50 +207,101 @@ def safe_roc_curve(y_true, y_scores):
     return roc_curve(y_true, y_scores, pos_label=1)
 
 
-def render_patient_drug_guide(pred_label):
-    """Show a simple, patient-friendly treatment overview based on evidence-based cancer-care guidance."""
-    st.markdown("---")
-    st.subheader("💊 Patient-Friendly Treatment Overview")
-
+def get_care_pathway(probability, pred_label):
+    """Convert model probability into a clinician-friendly care pathway."""
     if pred_label == 1:
-        st.markdown(
-            """
-            <div class="card-container">
-                <strong>What this means for the patient</strong>
-                <p>This scan result does not identify a single cure, and it does not tell a doctor which medication to prescribe. A confirmed diagnosis requires biopsy and staging before treatment planning.</p>
-                <ul>
-                    <li><strong>Surgery:</strong> may be used when the tumor can be removed safely.</li>
-                    <li><strong>Radiation therapy:</strong> may be used to destroy or control cancer cells.</li>
-                    <li><strong>Chemotherapy:</strong> uses medicines to stop fast-growing cancer cells.</li>
-                    <li><strong>Targeted therapy:</strong> may be used when specific cancer-cell changes are found.</li>
-                    <li><strong>Immunotherapy:</strong> may help the immune system fight the cancer.</li>
-                    <li><strong>Supportive care:</strong> helps manage symptoms and improve quality of life.</li>
-                </ul>
-                <p><em>The best treatment is decided by a specialist after biopsy, staging, and overall health are reviewed.</em></p>
+        if probability >= 0.80:
+            return {
+                "badge": "High concern",
+                "badge_class": "status-badge-malignant",
+                "priority": "Urgent specialist review",
+                "summary": "The model indicates a strong likelihood of a malignant finding. This should trigger prompt specialist evaluation, biopsy confirmation, and staging before any treatment plan is finalized.",
+                "actions": [
+                    "Refer to a pulmonologist or oncologist for confirmation and next-step planning.",
+                    "Arrange biopsy and staging studies such as CT or PET review as appropriate.",
+                    "Discuss whether surgery, radiation, systemic therapy, or supportive care is appropriate after diagnosis."
+                ],
+                "treatments": ["Surgery", "Radiation therapy", "Chemotherapy", "Targeted therapy", "Immunotherapy", "Supportive care"],
+            }
+        elif probability >= 0.60:
+            return {
+                "badge": "Moderate concern",
+                "badge_class": "status-badge-malignant",
+                "priority": "Prompt clinician follow-up",
+                "summary": "The scan pattern is concerning enough to merit specialist review and additional diagnostic workup.",
+                "actions": [
+                    "Book a follow-up consultation with a lung specialist.",
+                    "Discuss whether repeat imaging or biopsy is needed based on symptoms and history.",
+                    "Prepare for treatment discussions if pathology confirms malignancy."
+                ],
+                "treatments": ["Radiation therapy", "Chemotherapy", "Targeted therapy", "Immunotherapy"],
+            }
+        return {
+            "badge": "Watchful monitoring",
+            "badge_class": "status-badge-malignant",
+            "priority": "Clinical review",
+            "summary": "The model still flags risk, but the evidence is not yet strong enough to assume a diagnosis. More review is needed.",
+            "actions": [
+                "Continue medical follow-up and review symptoms carefully.",
+                "Ask about repeat imaging or specialist consultation if symptoms change.",
+                "Do not rely on home remedies or supplements as a substitute for evaluation."
+            ],
+            "treatments": ["Monitoring", "Repeat imaging", "Supportive care"],
+        }
+
+    return {
+        "badge": "Lower concern",
+        "badge_class": "status-badge-benign",
+        "priority": "Routine follow-up",
+        "summary": "The model does not indicate a strong malignant pattern, but this does not replace a clinician's judgment.",
+        "actions": [
+            "Continue routine follow-up and discuss symptoms with a physician.",
+            "Maintain healthy lung habits and stop smoking if applicable.",
+            "Seek medical advice promptly if new symptoms such as cough, chest pain, or weight loss appear."
+        ],
+        "treatments": ["Monitoring", "Symptom management", "Preventive care"],
+    }
+
+
+def render_patient_drug_guide(probability, pred_label):
+    """Show a modern, patient-friendly treatment overview based on the model result."""
+    st.markdown("---")
+    st.subheader("🧭 Model-Guided Care Pathway")
+
+    pathway = get_care_pathway(probability, pred_label)
+    st.markdown(
+        f"""
+        <div class="recommendation-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:0.8rem; flex-wrap:wrap;">
+                <div>
+                    <div class="tiny-label">Care pathway</div>
+                    <div class="recommendation-title">{pathway['badge']}</div>
+                </div>
+                <span class="{pathway['badge_class']}">{pathway['badge']}</span>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
-    else:
-        st.markdown(
-            """
-            <div class="card-container">
-                <strong>What to expect</strong>
-                <p>No treatment is suggested from this imaging result alone. A doctor may recommend routine monitoring, follow-up imaging, or symptom care depending on symptoms and medical history.</p>
-                <ul>
-                    <li>Discuss symptoms, smoking history, and family history with a physician.</li>
-                    <li>Stopping smoking and keeping regular follow-up appointments are beneficial.</li>
-                    <li>Do not rely on home remedies or supplements as a substitute for medical evaluation.</li>
-                </ul>
+            <p class="recommendation-summary">{pathway['summary']}</p>
+            <div class="recommendation-grid">
+                <div class="info-card">
+                    <div class="tiny-label">Priority</div>
+                    <div class="highlight">{pathway['priority']}</div>
+                </div>
+                <div class="info-card">
+                    <div class="tiny-label">Possible treatment categories</div>
+                    <div class="highlight">{', '.join(pathway['treatments'])}</div>
+                </div>
             </div>
-            """,
-            unsafe_allow_html=True,
-        )
+            <ul class="action-list">
+                {''.join([f'<li>{action}</li>' for action in pathway['actions']])}
+            </ul>
+            <p class="subtle-text"><strong>Important:</strong> This is not a prescription and does not replace medical review. Only a qualified clinician can decide the correct treatment after biopsy, imaging, and clinical assessment.</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ----------------- App Layout & Sidebar -----------------
 
-st.markdown('<div class="main-title">Lung Nodule Prediction System</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle-text">Interactive prediction, model validation & diagnostics dashboard</div>', unsafe_allow_html=True)
+st.markdown('<div class="hero-panel"><div class="hero-title">Lung Nodule Care Intelligence</div><div class="hero-subtitle">Modern scan review, model-driven insight, and patient-friendly treatment guidance in one dashboard.</div></div>', unsafe_allow_html=True)
 
 st.sidebar.image("https://img.icons8.com/color/96/000000/lungs.png", width=80)
 st.sidebar.header("📁 Configuration")
@@ -424,7 +554,7 @@ with tab1:
                         "**Suggested actions:** Continue routine monitoring, encourage preventive lung health measures, and follow up if symptoms develop."
                     )
 
-                render_patient_drug_guide(pred_label)
+                render_patient_drug_guide(prob, pred_label)
 
                 # Details columns for models
                 if gb_model:
