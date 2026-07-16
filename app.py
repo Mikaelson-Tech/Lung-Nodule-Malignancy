@@ -127,6 +127,47 @@ def safe_roc_curve(y_true, y_scores):
         return None
     return roc_curve(y_true, y_scores, pos_label=1)
 
+
+def render_patient_drug_guide(pred_label):
+    """Show a simple, patient-friendly treatment overview based on evidence-based cancer-care guidance."""
+    st.markdown("---")
+    st.subheader("💊 Patient-Friendly Treatment Overview")
+
+    if pred_label == 1:
+        st.markdown(
+            """
+            <div class="card-container">
+                <strong>What this means for the patient</strong>
+                <p>This scan result does not identify a single cure, and it does not tell a doctor which medication to prescribe. A confirmed diagnosis requires biopsy and staging before treatment planning.</p>
+                <ul>
+                    <li><strong>Surgery:</strong> may be used when the tumor can be removed safely.</li>
+                    <li><strong>Radiation therapy:</strong> may be used to destroy or control cancer cells.</li>
+                    <li><strong>Chemotherapy:</strong> uses medicines to stop fast-growing cancer cells.</li>
+                    <li><strong>Targeted therapy:</strong> may be used when specific cancer-cell changes are found.</li>
+                    <li><strong>Immunotherapy:</strong> may help the immune system fight the cancer.</li>
+                    <li><strong>Supportive care:</strong> helps manage symptoms and improve quality of life.</li>
+                </ul>
+                <p><em>The best treatment is decided by a specialist after biopsy, staging, and overall health are reviewed.</em></p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            """
+            <div class="card-container">
+                <strong>What to expect</strong>
+                <p>No treatment is suggested from this imaging result alone. A doctor may recommend routine monitoring, follow-up imaging, or symptom care depending on symptoms and medical history.</p>
+                <ul>
+                    <li>Discuss symptoms, smoking history, and family history with a physician.</li>
+                    <li>Stopping smoking and keeping regular follow-up appointments are beneficial.</li>
+                    <li>Do not rely on home remedies or supplements as a substitute for medical evaluation.</li>
+                </ul>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
 # ----------------- App Layout & Sidebar -----------------
 
 st.markdown('<div class="main-title">Lung Nodule Prediction System</div>', unsafe_allow_html=True)
@@ -382,6 +423,8 @@ with tab1:
                     st.write(
                         "**Suggested actions:** Continue routine monitoring, encourage preventive lung health measures, and follow up if symptoms develop."
                     )
+
+                render_patient_drug_guide(pred_label)
 
                 # Details columns for models
                 if gb_model:
